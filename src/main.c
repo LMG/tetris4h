@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <SDL/SDL.h>
+#include <SDL/SDL_image.h>
 #include <time.h>
 #include <unistd.h>
 
@@ -30,6 +31,7 @@ void tick()
 
 int main(int argc, char* argv[])
 {
+	//Init
 	SDL_Surface *screen = NULL;
 
 	if(SDL_Init(SDL_INIT_VIDEO) != 0)
@@ -43,11 +45,16 @@ int main(int argc, char* argv[])
 		perror("Error setting video mode.");
 		return EXIT_FAILURE;
 	}
+
+	SDL_Surface *background = IMG_Load("../ressources/background.png");
 	
+	//Main loop
 	int running=1;
 	while(running)
 	{
 		SDL_Event event;
+
+		//Manage events
 		while(SDL_PollEvent(&event))
 		{
 			switch(event.type)
@@ -60,6 +67,13 @@ int main(int argc, char* argv[])
 			}
 		}
 
+		//Print stuff
+		//Starts with background
+		SDL_BlitSurface(background, NULL, screen, NULL);
+		//for(int i=0; i<NB_
+
+
+		SDL_Flip(screen);
 		tick();
 	}
 
