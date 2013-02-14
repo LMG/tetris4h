@@ -14,6 +14,9 @@
 #define SHAPE_WIDTH 40
 #define GAME_WIDTH 10
 #define GAME_HEIGHT HEIGHT/SHAPE_WIDTH
+#define ORIGIN_X 200
+#define LOCK_TIME 30
+#define FALL_SPEED 10
 
 //allows to manage main loop speed
 void tick()
@@ -39,10 +42,10 @@ typedef struct shape {
 	int matrix[4][4];
 } shape;
 
-void blitShape(SDL_Surface* screen, shape* shape, SDL_Surface* sprite, SDL_Rect origin)
+void blitShape(SDL_Surface* screen, shape* shape, SDL_Surface* sprite)
 {
-	int x= shape->pos.x*40 + origin.x;
-	int y= shape->pos.y*40 + origin.y;
+	int x= shape->pos.x*40 + ORIGIN_X;
+	int y= shape->pos.y*40;
 	
 	for(int i=0; i<4; i++)
 	{
@@ -59,7 +62,7 @@ void blitShape(SDL_Surface* screen, shape* shape, SDL_Surface* sprite, SDL_Rect 
 	}
 }
 
-void blitScreen(SDL_Surface* screen, int g[GAME_WIDTH][GAME_HEIGHT], SDL_Surface* sprite, SDL_Rect origin)
+void blitScreen(SDL_Surface* screen, int g[GAME_WIDTH][GAME_HEIGHT], SDL_Surface* sprite)
 {
 	for(int i=0; i<GAME_WIDTH; i++)
 	{
@@ -68,8 +71,8 @@ void blitScreen(SDL_Surface* screen, int g[GAME_WIDTH][GAME_HEIGHT], SDL_Surface
 			if(g[i][j]==1)
 			{
 				SDL_Rect position = {
-					origin.x + i*40,
-					origin.y + j*40};
+					ORIGIN_X + i*40,
+					j*40};
 				SDL_BlitSurface(sprite, NULL, screen, &position);
 			}
 		}
@@ -93,20 +96,20 @@ void initShape(shape* shape)
 		{ 0, 0, 1, 1}},
 	    {{ 0, 0, 0, 0},
 		{ 0, 0, 0, 0},
-		{ 0, 0, 0, 0},
-		{ 0, 1, 0, 1}},
+		{ 0, 1, 1, 1},
+		{ 0, 0, 0, 1}},
 	    {{ 0, 0, 0, 0},
-		{ 0, 1, 0, 0},
-		{ 1, 1, 0, 0},
-		{ 0, 1, 0, 0}},
-	    {{ 0, 0, 0, 0},
-		{ 0, 0, 0, 0},
-		{ 1, 1, 0, 0},
-		{ 0, 1, 1, 0}},
+		{ 0, 0, 0, 1},
+		{ 0, 0, 1, 1},
+		{ 0, 0, 0, 1}},
 	    {{ 0, 0, 0, 0},
 		{ 0, 0, 0, 0},
 		{ 0, 1, 1, 0},
-		{ 1, 1, 0, 0}}};
+		{ 0, 0, 1, 1}},
+	    {{ 0, 0, 0, 0},
+		{ 0, 0, 0, 0},
+		{ 0, 0, 1, 1},
+		{ 0, 1, 1, 0}}};
 	int select = rand()%7;
 	for(int i=0; i<4; i++)
 	{
@@ -116,11 +119,11 @@ void initShape(shape* shape)
 		}
 	}
 
-	shape->pos.x=0;
-	shape->pos.y=0;
+	shape->pos.x=rand()%(GAME_WIDTH-4);
+	shape->pos.y=-4;
 }
 
-int collision(shape* s, int g[GAME_WIDTH][GAME_HEIGHT])
+int yCollision(shape* s, int g[GAME_WIDTH][GAME_HEIGHT])
 {
 	if(s->pos.y+4>=GAME_HEIGHT)
 		return 1;
@@ -137,6 +140,39 @@ int collision(shape* s, int g[GAME_WIDTH][GAME_HEIGHT])
 	return 0;
 }
 
+int xCollision(shape* s, int g[GAME_WIDTH][GAME_HEIGHT], int direction)
+{
+	for(int i=0; i<4; i++)
+	{
+		for(int j=0; j<4; j++)
+		{
+			if (direction >0)
+			{
+				if (s->matrix[i][j] && s->pos.x+i >= GAME_WIDTH-1)
+				{
+					return 1;
+				}
+				else if ((s->matrix[i][j]==1) && (g[s->pos.x+i+1][s->pos.y+j]==1))
+				{
+					return 1;
+				}
+			}
+			else if (direction < 0)
+			{
+				if (s->matrix[i][j] && s->pos.x+i <= 0)
+				{
+					return 1;
+				}
+				else if ((s->matrix[i][j]==1) && (g[s->pos.x+i-1][s->pos.y+j]==1))
+				{
+					return 1;
+				}
+			}
+		}
+	}
+	return 0;	
+}
+
 void update(int g[GAME_WIDTH][GAME_HEIGHT], shape* s)
 {
 	for(int i=0; i<4; i++)
@@ -151,6 +187,76 @@ void update(int g[GAME_WIDTH][GAME_HEIGHT], shape* s)
 	}
 }
 
+void moveBlocks(int g[GAME_WIDTH][GAME_HEIGHT], int jStart)
+{
+	for(int i=0; i<GAME_WIDTH; i++)
+	{
+		for(int j=jStart; j>0; j--)
+		{
+			g[i][j] = g[i][j-1];
+		}
+	}
+}
+
+
+int lineFull(int g[GAME_WIDTH][GAME_HEIGHT], int j)
+{	
+	for(int i=0; i<GAME_WIDTH; i++)
+	{
+		if(!g[i][j])
+			return 0;
+	}
+	return 1;
+}
+
+void checkLines(int g[GAME_WIDTH][GAME_HEIGHT])
+{
+	for (int j=0; j<GAME_HEIGHT; j++)
+	{
+		if(lineFull(g, j))
+		{
+			moveBlocks(g, j);
+		}
+	}
+}
+
+void turnShapeRight (shape* s)
+{
+	int aux[4][4];
+	for(int i=0; i<4; i++)
+	{
+		for(int j=0; j<4; j++)
+		{
+			aux[i][j] = s->matrix[i][j];
+		}
+	}
+	for(int i=0; i<4; i++)
+	{
+		for(int j=0; j<4; j++)
+		{
+			s->matrix[i][j] = aux[j][3-i];
+		}
+	}
+}
+
+void turnShapeLeft (shape* s)
+{
+	int aux[4][4];
+	for(int i=0; i<4; i++)
+	{
+		for(int j=0; j<4; j++)
+		{
+			aux[i][j] = s->matrix[i][j];
+		}
+	}
+	for(int i=0; i<4; i++)
+	{
+		for(int j=0; j<4; j++)
+		{
+			s->matrix[i][j] = aux[3-j][i];
+		}
+	}
+}
 
 int main(int argc, char* argv[])
 {
@@ -171,7 +277,6 @@ int main(int argc, char* argv[])
 
 	SDL_Surface *background = IMG_Load("../ressources/background.png");
 	SDL_Surface *sprite = IMG_Load("../ressources/shape.png");
-	SDL_Rect origin = {.x=200, .y=0};
 
 	shape shape;
 	initShape(&shape);
@@ -191,6 +296,7 @@ int main(int argc, char* argv[])
 	//Main loop
 	int running=1;
 	int cmpt=0;
+	int bottomLock=0;
 	while(running)
 	{
 		SDL_Event event;
@@ -204,36 +310,68 @@ int main(int argc, char* argv[])
 					running = 0;
 					break;
 				case SDL_KEYDOWN:
+					switch(event.key.keysym.sym)
+					{
+						case SDLK_RIGHT:
+							if(!xCollision(&shape, game, 1))
+								shape.pos.x += 1;
+							break;
+						case SDLK_LEFT:
+							if(!xCollision(&shape, game, -1))
+								shape.pos.x -= 1;
+							break;
+						case SDLK_SPACE:
+							while(!yCollision(&shape, game))
+								shape.pos.y++;
+							bottomLock=LOCK_TIME;
+							break;
+						case SDLK_a:
+							turnShapeLeft(&shape);
+							break;
+						case SDLK_z:
+							turnShapeRight(&shape);
+							break;
+						default:
+							break;
+					}
 					break;
 				default:
 					break;
 			}
 		}
 
+		//lines
+		checkLines(game);
+
 		//Game stuff
 		//move shape down
-		if(cmpt>10)
+		if(yCollision(&shape, game))
+		{
+			if(bottomLock < LOCK_TIME)
+			{
+				bottomLock++;
+			}
+			else
+			{
+				bottomLock=0;
+				update(game, &shape);
+				initShape(&shape);
+			}
+		}
+		//Manage fall speed
+		else if(cmpt>FALL_SPEED)
 		{
 			shape.pos.y++;
+			bottomLock=0;
 			cmpt=0;
 		}
-		else
-		{
-			cmpt++;
-		}
-
-		if(collision(&shape, game))
-		{
-			update(game, &shape);
-			initShape(&shape);
-		}
-
+		cmpt++;
 
 		//Print stuff
 		//Starts with background
 		SDL_BlitSurface(background, NULL, screen, NULL);
-		blitShape(screen, &shape, sprite, origin);
-		blitScreen(screen, game, sprite, origin);
+		blitShape(screen, &shape, sprite);
+		blitScreen(screen, game, sprite);
 
 		SDL_Flip(screen);
 		tick();
