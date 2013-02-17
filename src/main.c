@@ -7,8 +7,8 @@
 
 #define WIDTH 800
 #define HEIGHT 600
-//tick in ms
-#define TICK 100
+//tick in us
+#define TICK 50000
 #define NB_BASE_SHAPE 7
 #define NB_SHAPES 1000
 #define SHAPE_WIDTH 40
@@ -21,20 +21,20 @@
 //allows to manage main loop speed
 void tick()
 {
-	static int previousTime = 0;
+	static clock_t previousTime = 0;
 	
-	int runTime = time(NULL)-previousTime;
+	clock_t runTime = clock()-previousTime;
 
 	if(runTime > TICK)
 	{
-		printf("Can't keep up ! Did the system time change or is the computer overloaded?\n");
+		printf("Can't keep up ! Did the system time change or is the computer overloaded? (runtime = %d, previoustime = %d, clock = %d)\n", (int) runTime, (int) previousTime, (int) clock());
 	}
 	else
 	{
-		usleep(TICK-runTime);
+		usleep((TICK-runTime)/(CLOCKS_PER_SEC/1000000));
 	}
 	
-	previousTime = time(NULL);
+	previousTime = clock();
 }
 
 typedef struct shape {
