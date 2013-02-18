@@ -183,7 +183,11 @@ void update(int g[GAME_WIDTH][GAME_HEIGHT], shape* s)
 	{
 		for(int j=0; j<4; j++)
 		{
-			if(s->matrix[i][j])
+			if(s->matrix[i][j] 
+					&& s->pos.x+i < GAME_WIDTH 
+					&& s->pos.x+i >= 0
+					&& s->pos.y+j < GAME_HEIGHT
+					&& s->pos.y+j >=0)
 			{
 				g[s->pos.x+i][s->pos.y+j]=1;
 			}
@@ -191,6 +195,7 @@ void update(int g[GAME_WIDTH][GAME_HEIGHT], shape* s)
 	}
 }
 
+// Moves all blocks from game one line down for line deletion
 void moveBlocks(int g[GAME_WIDTH][GAME_HEIGHT], int jStart)
 {
 	for(int i=0; i<GAME_WIDTH; i++)
@@ -282,6 +287,8 @@ int main(int argc, char* argv[])
 	SDL_Surface *background = IMG_Load("../ressources/background.png");
 	SDL_Surface *sprite = IMG_Load("../ressources/shape.png");
 
+	srand(time(NULL));
+
 	shape shape;
 	initShape(&shape);
 
@@ -295,7 +302,6 @@ int main(int argc, char* argv[])
 		}
 	}
 
-	srand(time(NULL));
 
 	//Main loop
 	int running=1;
@@ -304,6 +310,7 @@ int main(int argc, char* argv[])
 	while(running)
 	{
 		SDL_Event event;
+		printf("shape x %d, shape y %d\n", shape.pos.x, shape.pos.y);
 
 		//Manage events
 		while(SDL_PollEvent(&event))
