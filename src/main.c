@@ -125,13 +125,17 @@ void initShape(shape* shape)
 
 int yCollision(shape* s, int g[GAME_WIDTH][GAME_HEIGHT])
 {
-	if(s->pos.y+4>=GAME_HEIGHT)
-		return 1;
 	for(int i=0; i<4; i++)
 	{
 		for(int j=0; j<4; j++)
 		{
-			if ((s->matrix[i][j]==1) && (g[s->pos.x+i][s->pos.y+j+1]==1))
+			int blockX = s->pos.x+i;
+			int blockY = s->pos.y+j;
+			int isBlock = s->matrix[i][j];
+			if (isBlock && blockY >= 0
+					&& (( blockY < GAME_HEIGHT 
+						&& g[blockX][blockY+1])
+						|| blockY+1 >= GAME_HEIGHT))
 			{
 				return 1;
 			}
@@ -148,7 +152,7 @@ int xCollision(shape* s, int g[GAME_WIDTH][GAME_HEIGHT], int direction)
 		{
 			if (direction >0)
 			{
-				if (s->matrix[i][j] && s->pos.x+i >= GAME_WIDTH-1)
+				if (s->matrix[i][j] && s->pos.x+i >= GAME_WIDTH)
 				{
 					return 1;
 				}
@@ -326,10 +330,15 @@ int main(int argc, char* argv[])
 							bottomLock=LOCK_TIME;
 							break;
 						case SDLK_a:
+						case SDLK_UP:
 							turnShapeLeft(&shape);
 							break;
 						case SDLK_z:
 							turnShapeRight(&shape);
+							break;
+						case SDLK_DOWN:
+							if(!yCollision(&shape, game))
+								shape.pos.y++;
 							break;
 						default:
 							break;
