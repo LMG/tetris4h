@@ -84,32 +84,32 @@ void initShape(shape* shape)
 	int baseShape[7][4][4]= {{
 		{ 0, 0, 0, 0},
 		{ 0, 0, 0, 0},
-		{ 0, 0, 0, 0},
-		{ 1, 1, 1, 1}},
+		{ 1, 1, 1, 1},
+		{ 0, 0, 0, 0}},
 	    {{ 0, 0, 0, 0},
-		{ 0, 0, 0, 0},
 		{ 0, 0, 0, 1},
-		{ 0, 1, 1, 1}},
-	    {{ 0, 0, 0, 0},
-		{ 0, 0, 0, 0},
-		{ 0, 0, 1, 1},
-		{ 0, 0, 1, 1}},
-	    {{ 0, 0, 0, 0},
-		{ 0, 0, 0, 0},
 		{ 0, 1, 1, 1},
-		{ 0, 0, 0, 1}},
+		{ 0, 0, 0, 0}},
 	    {{ 0, 0, 0, 0},
-		{ 0, 0, 0, 1},
-		{ 0, 0, 1, 1},
-		{ 0, 0, 0, 1}},
-	    {{ 0, 0, 0, 0},
-		{ 0, 0, 0, 0},
 		{ 0, 1, 1, 0},
-		{ 0, 0, 1, 1}},
+		{ 0, 1, 1, 0},
+		{ 0, 0, 0, 0}},
 	    {{ 0, 0, 0, 0},
-		{ 0, 0, 0, 0},
+		{ 0, 1, 1, 1},
+		{ 0, 0, 0, 1},
+		{ 0, 0, 0, 0}},
+	    {{ 0, 0, 0, 0},
 		{ 0, 0, 1, 1},
-		{ 0, 1, 1, 0}}};
+		{ 0, 0, 0, 1},
+		{ 0, 0, 0, 1}},
+	    {{ 0, 0, 0, 0},
+		{ 0, 1, 1, 0},
+		{ 0, 0, 1, 1},
+		{ 0, 0, 0, 0}},
+	    {{ 0, 0, 0, 0},
+		{ 0, 0, 1, 1},
+		{ 0, 1, 1, 0},
+		{ 0, 0, 0, 0}}};
 	int select = rand()%7;
 	for(int i=0; i<4; i++)
 	{
@@ -125,13 +125,17 @@ void initShape(shape* shape)
 
 int yCollision(shape* s, int g[GAME_WIDTH][GAME_HEIGHT])
 {
-	if(s->pos.y+4>=GAME_HEIGHT)
-		return 1;
 	for(int i=0; i<4; i++)
 	{
 		for(int j=0; j<4; j++)
 		{
-			if ((s->matrix[i][j]==1) && (g[s->pos.x+i][s->pos.y+j+1]==1))
+			int blockX = s->pos.x+i;
+			int blockY = s->pos.y+j;
+			int isBlock = s->matrix[i][j];
+			if (isBlock && blockY >= 0
+					&& (( blockY < GAME_HEIGHT 
+						&& g[blockX][blockY+1])
+						|| blockY+1 >= GAME_HEIGHT))
 			{
 				return 1;
 			}
@@ -148,7 +152,7 @@ int xCollision(shape* s, int g[GAME_WIDTH][GAME_HEIGHT], int direction)
 		{
 			if (direction >0)
 			{
-				if (s->matrix[i][j] && s->pos.x+i >= GAME_WIDTH-1)
+				if (s->matrix[i][j] && s->pos.x+i >= GAME_WIDTH)
 				{
 					return 1;
 				}
@@ -179,7 +183,11 @@ void update(int g[GAME_WIDTH][GAME_HEIGHT], shape* s)
 	{
 		for(int j=0; j<4; j++)
 		{
-			if(s->matrix[i][j])
+			if(s->matrix[i][j] 
+					&& s->pos.x+i < GAME_WIDTH 
+					&& s->pos.x+i >= 0
+					&& s->pos.y+j < GAME_HEIGHT
+					&& s->pos.y+j >=0)
 			{
 				g[s->pos.x+i][s->pos.y+j]=1;
 			}
@@ -187,6 +195,7 @@ void update(int g[GAME_WIDTH][GAME_HEIGHT], shape* s)
 	}
 }
 
+// Moves all blocks from game one line down for line deletion
 void moveBlocks(int g[GAME_WIDTH][GAME_HEIGHT], int jStart)
 {
 	for(int i=0; i<GAME_WIDTH; i++)
@@ -278,6 +287,8 @@ int main(int argc, char* argv[])
 	SDL_Surface *background = IMG_Load("../ressources/background.png");
 	SDL_Surface *sprite = IMG_Load("../ressources/shape.png");
 
+	srand(time(NULL));
+
 	shape shape;
 	initShape(&shape);
 
@@ -291,7 +302,6 @@ int main(int argc, char* argv[])
 		}
 	}
 
-	srand(time(NULL));
 
 	//Main loop
 	int running=1;
@@ -300,6 +310,7 @@ int main(int argc, char* argv[])
 	while(running)
 	{
 		SDL_Event event;
+		printf("shape x %d, shape y %d\n", shape.pos.x, shape.pos.y);
 
 		//Manage events
 		while(SDL_PollEvent(&event))
@@ -326,10 +337,15 @@ int main(int argc, char* argv[])
 							bottomLock=LOCK_TIME;
 							break;
 						case SDLK_a:
+						case SDLK_UP:
 							turnShapeLeft(&shape);
 							break;
 						case SDLK_z:
 							turnShapeRight(&shape);
+							break;
+						case SDLK_DOWN:
+							if(!yCollision(&shape, game))
+								shape.pos.y++;
 							break;
 						default:
 							break;
