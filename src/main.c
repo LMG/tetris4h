@@ -4,6 +4,7 @@
 #include <SDL/SDL_image.h>
 #include <time.h>
 #include <unistd.h>
+#include <math.h>
 
 #define WIDTH 800
 #define HEIGHT 600
@@ -218,15 +219,18 @@ int lineFull(int g[GAME_WIDTH][GAME_HEIGHT], int j)
 	return 1;
 }
 
-void checkLines(int g[GAME_WIDTH][GAME_HEIGHT])
+int checkLines(int g[GAME_WIDTH][GAME_HEIGHT])
 {
+	int nbLines=0;
 	for (int j=0; j<GAME_HEIGHT; j++)
 	{
 		if(lineFull(g, j))
 		{
+			nbLines++;
 			moveBlocks(g, j);
 		}
 	}
+	return nbLines;
 }
 
 void turnShapeRight (shape* s)
@@ -307,6 +311,7 @@ int main(int argc, char* argv[])
 	int running=1;
 	int cmpt=0;
 	int bottomLock=0;
+	int score=0;
 	while(running)
 	{
 		SDL_Event event;
@@ -357,7 +362,11 @@ int main(int argc, char* argv[])
 		}
 
 		//lines
-		checkLines(game);
+		int nbLines = checkLines(game);
+		
+		if(nbLines)
+			score += pow(2, nbLines*2);
+		printf("%d\n", score);
 
 		//Game stuff
 		//move shape down
