@@ -239,6 +239,44 @@ int checkLines(int g[GAME_WIDTH][GAME_HEIGHT])
 	return nbLines;
 }
 
+int canTurnLeft (shape* s, int g[GAME_WIDTH][GAME_HEIGHT])
+{
+	int canTurn = 1;
+	for(int i=0; i<4; i++)
+	{
+		for(int j=0; j<4; j++)
+		{
+			if(s->matrix[i][j] 
+				&& (g[s->pos.x+j][s->pos.y+(3-i)]
+					|| s->pos.x+j >= GAME_WIDTH
+					|| s->pos.x+j < 0
+					|| s->pos.y+(3-i) >= GAME_HEIGHT
+					|| s->pos.y+(3-i) < 0))
+			{
+				canTurn = 0;
+			}
+		}
+	}
+	return canTurn;
+}
+
+int canTurnRight (shape* s, int g[GAME_WIDTH][GAME_HEIGHT])
+{
+	int canTurn = 1;
+	for(int i=0; i<4; i++)
+	{
+		for(int j=0; j<4; j++)
+		{
+			if(s->matrix[i][j] 
+				&& g[s->pos.x+(3-j)][s->pos.y+i])
+			{
+				canTurn = 0;
+			}
+		}
+	}
+	return canTurn;
+}
+
 void turnShapeRight (shape* s)
 {
 	int aux[4][4];
@@ -349,10 +387,12 @@ int main(int argc, char* argv[])
 							break;
 						case SDLK_a:
 						case SDLK_UP:
-							turnShapeLeft(&shape);
+							if(canTurnLeft(&shape, game))
+								turnShapeLeft(&shape);
 							break;
 						case SDLK_z:
-							turnShapeRight(&shape);
+							if(canTurnRight(&shape, game))
+								turnShapeRight(&shape);
 							break;
 						case SDLK_DOWN:
 							if(!yCollision(&shape, game))
