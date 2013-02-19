@@ -10,7 +10,7 @@
 #define HEIGHT 600
 //tick in us
 #define TICK 50000
-#define NB_BASE_SHAPE 7
+#define NB_BASE_SHAPE 6
 #define NB_SHAPES 1000
 #define SHAPE_WIDTH 40
 #define GAME_WIDTH 10
@@ -82,27 +82,23 @@ void blitScreen(SDL_Surface* screen, int g[GAME_WIDTH][GAME_HEIGHT], SDL_Surface
 
 void initShape(shape* shape)
 {	
-	int baseShape[7][4][4]= {{
+	int baseShape[NB_BASE_SHAPE][4][4]= {{
 		{ 0, 0, 0, 0},
 		{ 0, 0, 0, 0},
 		{ 1, 1, 1, 1},
 		{ 0, 0, 0, 0}},
 	    {{ 0, 0, 0, 0},
-		{ 0, 0, 0, 1},
-		{ 0, 1, 1, 1},
+		{ 0, 0, 1, 0},
+		{ 1, 1, 1, 0},
 		{ 0, 0, 0, 0}},
 	    {{ 0, 0, 0, 0},
 		{ 0, 1, 1, 0},
 		{ 0, 1, 1, 0},
 		{ 0, 0, 0, 0}},
 	    {{ 0, 0, 0, 0},
-		{ 0, 1, 1, 1},
-		{ 0, 0, 0, 1},
+		{ 1, 1, 1, 0},
+		{ 0, 0, 1, 0},
 		{ 0, 0, 0, 0}},
-	    {{ 0, 0, 0, 0},
-		{ 0, 0, 1, 1},
-		{ 0, 0, 0, 1},
-		{ 0, 0, 0, 1}},
 	    {{ 0, 0, 0, 0},
 		{ 0, 1, 1, 0},
 		{ 0, 0, 1, 1},
@@ -111,7 +107,8 @@ void initShape(shape* shape)
 		{ 0, 0, 1, 1},
 		{ 0, 1, 1, 0},
 		{ 0, 0, 0, 0}}};
-	int select = rand()%7;
+	int select = rand()%NB_BASE_SHAPE;
+	printf("%d\n", select);
 	for(int i=0; i<4; i++)
 	{
 		for(int j=0; j<4; j++)
@@ -153,7 +150,7 @@ int xCollision(shape* s, int g[GAME_WIDTH][GAME_HEIGHT], int direction)
 		{
 			if (direction >0)
 			{
-				if (s->matrix[i][j] && s->pos.x+i >= GAME_WIDTH)
+				if (s->matrix[i][j] && s->pos.x+i >= GAME_WIDTH-1)
 				{
 					return 1;
 				}
@@ -356,6 +353,7 @@ int main(int argc, char* argv[])
 	int cmpt=0;
 	int bottomLock=0;
 	int score=0;
+	int waiting = 1;
 	while(running)
 	{
 		SDL_Event event;
@@ -368,6 +366,7 @@ int main(int argc, char* argv[])
 			{
 				case SDL_QUIT: 
 					running = 0;
+					waiting = 0;
 					break;
 				case SDL_KEYDOWN:
 					switch(event.key.keysym.sym)
@@ -448,7 +447,6 @@ int main(int argc, char* argv[])
 		tick();
 	}
 	
-	int waiting = 1;
 	while(waiting)
 	{
 		SDL_Event event;
