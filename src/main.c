@@ -455,6 +455,9 @@ int main(int argc, char* argv[])
 		SDL_WaitEvent(&event);
 		switch(event.type)
 		{
+			case SDL_QUIT:
+				waiting=0;
+				break;
 			case SDL_KEYDOWN:
 				if(event.key.keysym.sym == SDLK_SPACE)
 					waiting=0;
