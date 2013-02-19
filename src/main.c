@@ -178,7 +178,7 @@ int xCollision(shape* s, int g[GAME_WIDTH][GAME_HEIGHT], int direction)
 	return 0;	
 }
 
-void update(int g[GAME_WIDTH][GAME_HEIGHT], shape* s)
+int update(int g[GAME_WIDTH][GAME_HEIGHT], shape* s)
 {
 	for(int i=0; i<4; i++)
 	{
@@ -192,8 +192,14 @@ void update(int g[GAME_WIDTH][GAME_HEIGHT], shape* s)
 			{
 				g[s->pos.x+i][s->pos.y+j]=1;
 			}
+			else if(s->matrix[i][j])
+			{
+				printf("%d, %d, %d, %d\n", s->pos.x+i, s->pos.y+j, i, j);
+				return 1;
+			}
 		}
 	}
+	return 0;
 }
 
 // Moves all blocks from game one line down for line deletion
@@ -379,7 +385,7 @@ int main(int argc, char* argv[])
 			else
 			{
 				bottomLock=0;
-				update(game, &shape);
+				running = !update(game, &shape);
 				initShape(&shape);
 			}
 		}
@@ -400,6 +406,22 @@ int main(int argc, char* argv[])
 
 		SDL_Flip(screen);
 		tick();
+	}
+	
+	int waiting = 1;
+	while(waiting)
+	{
+		SDL_Event event;
+		SDL_WaitEvent(&event);
+		switch(event.type)
+		{
+			case SDL_KEYDOWN:
+				if(event.key.keysym.sym == SDLK_SPACE)
+					waiting=0;
+				break;
+			default:
+				break;
+		}
 	}
 
 	return EXIT_SUCCESS;
