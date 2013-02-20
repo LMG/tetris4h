@@ -109,7 +109,6 @@ void initShape(shape* shape)
 		{ 0, 1, 1, 0},
 		{ 0, 0, 0, 0}}};
 	int select = rand()%NB_BASE_SHAPE;
-	printf("%d\n", select);
 	for(int i=0; i<4; i++)
 	{
 		for(int j=0; j<4; j++)
@@ -151,10 +150,17 @@ int xCollision(shape* s, int g[GAME_WIDTH][GAME_HEIGHT], int direction)
 		{
 			if (direction >0)
 			{
+				// rightmost border
 				if (s->matrix[i][j] && s->pos.x+i >= GAME_WIDTH-1)
 				{
 					return 1;
 				}
+				// No collisions above the ceiling
+				else if (s->matrix[i][j] && s->pos.y+j<0)
+				{
+					return 0;
+				}
+				// collisions
 				else if ((s->matrix[i][j]==1) && (g[s->pos.x+i+1][s->pos.y+j]==1))
 				{
 					return 1;
@@ -162,10 +168,17 @@ int xCollision(shape* s, int g[GAME_WIDTH][GAME_HEIGHT], int direction)
 			}
 			else if (direction < 0)
 			{
+				// leftmost border
 				if (s->matrix[i][j] && s->pos.x+i <= 0)
 				{
 					return 1;
 				}
+				// No collisions above the ceiling
+				else if (s->matrix[i][j] && s->pos.y+j<0)
+				{
+					return 0;
+				}
+				// collisions
 				else if ((s->matrix[i][j]==1) && (g[s->pos.x+i-1][s->pos.y+j]==1))
 				{
 					return 1;
@@ -192,7 +205,6 @@ int update(int g[GAME_WIDTH][GAME_HEIGHT], shape* s)
 			}
 			else if(s->matrix[i][j])
 			{
-				printf("%d, %d, %d, %d\n", s->pos.x+i, s->pos.y+j, i, j);
 				return 1;
 			}
 		}
