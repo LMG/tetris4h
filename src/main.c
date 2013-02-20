@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <SDL/SDL.h>
 #include <SDL/SDL_image.h>
+#include <SDL/SDL_ttf.h>
 #include <time.h>
 #include <unistd.h>
 #include <math.h>
@@ -334,6 +335,21 @@ int main(int argc, char* argv[])
 
 	srand(time(NULL));
 
+
+	if(TTF_Init())
+	{
+		perror("Error intializing TTF\n");
+		return EXIT_FAILURE;
+	}
+	TTF_Font* font;
+	if((font = TTF_OpenFont("../ressources/Ubuntu-R.ttf", 20))==NULL)
+	{
+		perror("Error loading font");
+		return EXIT_FAILURE;
+	}
+	SDL_Color black = {0,0,0,0};
+	SDL_Surface *scoreSurface = TTF_RenderText_Solid(font, "0", black);
+
 	shape shape;
 	initShape(&shape);
 
@@ -354,10 +370,10 @@ int main(int argc, char* argv[])
 	int bottomLock=0;
 	int score=0;
 	int waiting = 1;
+	int prevScore=0;
 	while(running)
 	{
 		SDL_Event event;
-		printf("shape x %d, shape y %d\n", shape.pos.x, shape.pos.y);
 
 		//Manage events
 		while(SDL_PollEvent(&event))
@@ -411,7 +427,14 @@ int main(int argc, char* argv[])
 		
 		if(nbLines)
 			score += pow(2, nbLines*2);
-		printf("%d\n", score);
+		if(score!=prevScore)
+		{
+			prevScore=score;
+			char scoreString[5];
+			sprintf(scoreString, "%d", score<10000?score:10000);
+			scoreSurface = TTF_RenderText_Solid(font, scoreString, black);
+			printf("%d\n", score);
+		}
 
 		//Game stuff
 		//move shape down
@@ -442,6 +465,10 @@ int main(int argc, char* argv[])
 		SDL_BlitSurface(background, NULL, screen, NULL);
 		blitShape(screen, &shape, sprite);
 		blitScreen(screen, game, sprite);
+		SDL_Rect position = {
+			50,
+			100};
+		SDL_BlitSurface(scoreSurface, NULL, screen, &position);
 
 		SDL_Flip(screen);
 		tick();
