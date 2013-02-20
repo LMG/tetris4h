@@ -347,6 +347,7 @@ int main(int argc, char* argv[])
 
 	srand(time(NULL));
 
+	SDL_EnableKeyRepeat(SDL_DEFAULT_REPEAT_DELAY, SDL_DEFAULT_REPEAT_INTERVAL);
 
 	if(TTF_Init())
 	{
