@@ -384,6 +384,7 @@ int main(int argc, char* argv[])
 	int score=0;
 	int waiting = 1;
 	int prevScore=0;
+	int colliding=0;
 	while(running)
 	{
 		SDL_Event event;
@@ -402,29 +403,47 @@ int main(int argc, char* argv[])
 					{
 						case SDLK_RIGHT:
 							if(!xCollision(&shape, game, 1))
+							{
 								shape.pos.x += 1;
+								colliding = yCollision(&shape, game);
+							}
 							break;
 						case SDLK_LEFT:
 							if(!xCollision(&shape, game, -1))
+							{
 								shape.pos.x -= 1;
+								colliding = yCollision(&shape, game);
+							}
 							break;
 						case SDLK_SPACE:
 							while(!yCollision(&shape, game))
+							{
 								shape.pos.y++;
+								colliding = 1;
+							}
 							bottomLock=LOCK_TIME;
 							break;
 						case SDLK_a:
 						case SDLK_UP:
 							if(canTurnLeft(&shape, game))
+							{
 								turnShapeLeft(&shape);
+								colliding = yCollision(&shape, game);
+							}
 							break;
 						case SDLK_z:
 							if(canTurnRight(&shape, game))
+							{
 								turnShapeRight(&shape);
+								colliding = yCollision(&shape, game);
+							}
 							break;
 						case SDLK_DOWN:
 							if(!yCollision(&shape, game))
+							{
 								shape.pos.y++;
+								colliding = yCollision(&shape, game);
+							}
 							break;
 						default:
 							break;
@@ -451,7 +470,7 @@ int main(int argc, char* argv[])
 
 		//Game stuff
 		//move shape down
-		if(yCollision(&shape, game))
+		if(colliding)
 		{
 			if(bottomLock < LOCK_TIME)
 			{
@@ -460,6 +479,7 @@ int main(int argc, char* argv[])
 			else
 			{
 				bottomLock=0;
+				colliding=0;
 				running = !update(game, &shape);
 				initShape(&shape);
 			}
